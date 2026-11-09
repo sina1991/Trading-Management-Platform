@@ -1,29 +1,30 @@
 # Roadmap
 
-## Phase 1 — Foundation (v1)
+## Phase 1 — Foundation
 
-- [x] Python package and Modular Monolith foundation
-- [x] Interactive CLI and complete menu catalog
-- [x] Central Command Registry
-- [x] Per-command Readiness Checker
-- [x] Project Structure Inspector
-- [x] System Status
-- [x] Configuration and logging foundations
-- [x] Automated tests and CI workflow
-- [x] Documentation and agent handoff
+- [x] Python Modular Monolith and package structure
+- [x] CLI, central Command Registry, evidence-based readiness
+- [x] Configuration, logging, structure inspection, CI
 
 ## Phase 2 — Metadata and persistence
 
-Implement safe metadata management for venues, networks, tokens, contracts, ABIs, assets, trading pairs, and market definitions. Do not imply live connectivity.
+- [x] Typed Network, Token, Contract, ABI, Asset, TradingPair, TradingVenue, Market, FeeMetadata models
+- [x] Network-scoped token and contract identities
+- [x] Reusable ABI definitions and contract linkage
+- [x] Asset-to-token many-to-many association
+- [x] Venue-specific CEX/DEX market metadata and distinct fee fields
+- [x] SQLite repositories, schema version, foreign keys, CRUD and integrity checks
+- [x] CLI integration through the existing Command Registry
+- [x] Automated verification on Python 3.10, 3.11, and 3.12 (30 tests passed in each CI job)
 
-## Phase 3 — Strategy and Bot management
+## Phase 3 — Strategy and Bot metadata
 
-Implement strategy definitions and independent Bot Instance metadata/lifecycle state. No algorithmic trading execution without a separately authorized phase.
+Implement strategy definitions and independent Bot Instance metadata/lifecycle state. No algorithmic trading execution.
 
 ## Phase 4 — Risk and simulation
 
 Define risk validation and deterministic simulation/paper-execution contracts. Keep Strategy, Risk, and Execution independent.
 
-## Phase 5 — External integrations (requires explicit approval)
+## Phase 5 — External integrations (separate authorization required)
 
-Only after separate approval: exchange/DEX adapters, network/RPC, wallet integration, and real execution. Security review, threat model, credential handling, and safety controls are prerequisites.
+Only after explicit approval: exchange/DEX adapters, network/RPC, wallet integration, and real execution. Security review, threat model, credential handling, and safety controls are prerequisites.

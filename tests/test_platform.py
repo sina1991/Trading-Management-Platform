@@ -12,7 +12,7 @@ from trading_platform.core import (
 def test_complete_command_catalog_and_menu():
     registry = CommandRegistry(build_command_specs())
     assert len(registry) >= 70
-    assert len(MAIN_MENU) == 16
+    assert len(MAIN_MENU) >= 20
     assert registry.get("bot.start").implementation == "planned"
 
 

@@ -18,6 +18,10 @@ MAIN_MENU = (
     ("system", "System Status"),
     ("readiness", "Project Readiness"),
     ("roadmap", "Development Roadmap"),
+    ("assets", "Asset Management"),
+    ("pairs", "Trading Pair Management"),
+    ("venues", "Trading Venue Management"),
+    ("storage", "Storage Management"),
 )
 
 RAW_COMMANDS = [
@@ -53,8 +57,8 @@ RAW_COMMANDS = [
 ("abi.inspect","Inspect ABI","Inspect an ABI artifact.","abis"),
 ("abi.validate","Validate ABI","Validate an ABI artifact.","abis"),
 ("abi.link","Link ABI to Contract","Associate an ABI with a contract.","abis"),
-("market.asset.add","Add Asset","Register a market asset.","markets"),
-("market.pair.add","Add Trading Pair","Register a trading pair.","markets"),
+("market.asset.add","Add Asset","Register a market asset.","assets"),
+("market.pair.add","Add Trading Pair","Register a trading pair.","pairs"),
 ("market.add","Add Market","Register a venue-specific market.","markets"),
 ("market.list","List Markets","List venue-specific markets.","markets"),
 ("market.find","Find Market","Find a market by venue and pair.","markets"),
@@ -97,6 +101,49 @@ RAW_COMMANDS = [
 ("project.readiness","Project Readiness","Inspect readiness of every registered command.","readiness"),
 ("project.inspect","Project Structure Inspector","Inspect required project paths.","readiness"),
 ("roadmap.view","Development Roadmap","Display the documented development roadmap.","roadmap"),
+
+("network.get","View Network","Retrieve a network by ID.","network"),
+("network.update","Update Network","Update network metadata.","network"),
+("network.delete","Delete Network","Delete a network after dependency checks.","network"),
+("network.validate","Validate Network","Validate network metadata.","network"),
+("network.find_chain","Find Network by Chain ID","Find a network by chain ID.","network"),
+("token.get","View Token","Retrieve a token by ID.","tokens"),
+("token.update","Update Token","Update token metadata.","tokens"),
+("token.delete","Delete Token","Delete a token.","tokens"),
+("contract.get","View Contract","Retrieve a contract by ID.","contracts"),
+("contract.update","Update Contract","Update contract metadata.","contracts"),
+("contract.delete","Delete Contract","Delete a contract.","contracts"),
+("contract.find_network","Find Contracts by Network","Find contracts on a network.","contracts"),
+("abi.get","View ABI","Retrieve an ABI by ID.","abis"),
+("abi.update","Update ABI","Update ABI metadata.","abis"),
+("abi.delete","Delete ABI","Delete an ABI when unused.","abis"),
+("abi.find","Find ABI","Find an ABI by name or version.","abis"),
+("asset.list","List Assets","List economic assets.","assets"),
+("asset.get","View Asset","Retrieve an asset by ID.","assets"),
+("asset.update","Update Asset","Update asset metadata.","assets"),
+("asset.delete","Delete Asset","Delete an asset when unused.","assets"),
+("asset.link_token","Link Token to Asset","Associate a network token representation with an economic asset.","assets"),
+("asset.tokens","List Asset Tokens","List token representations associated with an asset.","assets"),
+("asset.find","Find Asset","Find an economic asset by name or symbol.","assets"),
+("pair.list","List Trading Pairs","List trading pairs.","pairs"),
+("pair.get","View Trading Pair","Retrieve a trading pair by ID.","pairs"),
+("pair.update","Update Trading Pair","Update trading pair metadata.","pairs"),
+("pair.delete","Delete Trading Pair","Delete a trading pair when unused.","pairs"),
+("pair.validate","Validate Trading Pair","Validate pair and asset references.","pairs"),
+("venue.add","Add Venue","Register a CEX or DEX trading venue.","venues"),
+("venue.list","List Venues","List trading venues.","venues"),
+("venue.get","View Venue","Retrieve a venue by ID.","venues"),
+("venue.update","Update Venue","Update venue metadata.","venues"),
+("venue.delete","Delete Venue","Delete a venue when unused.","venues"),
+("market.get","View Market","Retrieve a market by ID.","markets"),
+("market.update","Update Market","Update market metadata.","markets"),
+("market.delete","Delete Market","Delete a market.","markets"),
+("market.validate","Validate Market","Validate venue and pair relationships.","markets"),
+("market.find_venue","Find Markets by Venue","Find markets belonging to a venue.","markets"),
+("market.find_pair","Find Markets by Trading Pair","Find markets for a trading pair.","markets"),
+("storage.status","Database Status","Show database status and entity counts.","storage"),
+("storage.schema","Schema Version","Show the current database schema version.","storage"),
+("storage.integrity","Database Integrity","Run SQLite integrity and foreign-key checks.","storage"),
 ]
 
 ACTIVE = {
@@ -109,6 +156,21 @@ ACTIVE = {
     "project.inspect": ("inspect", ("trading_platform/core.py",)),
     "roadmap.view": ("roadmap", ("docs/ROADMAP.md",)),
 }
+
+
+PHASE2_COMMANDS = {
+ "network.add","network.list","network.get","network.update","network.delete","network.validate","network.find_chain",
+ "token.add","token.list","token.get","token.update","token.delete","token.find","token.validate",
+ "contract.add","contract.list","contract.get","contract.update","contract.delete","contract.find_network","contract.validate",
+ "abi.add","abi.list","abi.get","abi.update","abi.delete","abi.validate","abi.link","abi.find",
+ "market.asset.add","asset.list","asset.get","asset.update","asset.delete","asset.link_token","asset.tokens","asset.find",
+ "market.pair.add","pair.list","pair.get","pair.update","pair.delete","pair.validate",
+ "venue.add","venue.list","venue.get","venue.update","venue.delete",
+ "market.add","market.list","market.get","market.update","market.delete","market.validate","market.find_venue","market.find_pair","market.fees.configure",
+ "storage.status","storage.schema","storage.integrity"
+}
+for _id in PHASE2_COMMANDS:
+    ACTIVE[_id] = ("metadata_dispatch", ("trading_platform/metadata.py","trading_platform/persistence.py","trading_platform/services.py","trading_platform/metadata_cli.py"))
 
 
 def build_command_specs():
