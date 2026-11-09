@@ -120,3 +120,15 @@ def test_metadata_readiness_does_not_create_uninitialized_database(tmp_path):
     checker = ReadinessChecker(tmp_path, {"storage": {"data_dir": str(data_dir)}})
     assert checker.check(command).status is ReadinessStatus.READY
     assert not (data_dir / "metadata.sqlite3").exists()
+
+
+def test_public_market_data_commands_are_ready_and_dispatched(project_root):
+    from trading_platform.cli import TradingPlatformCLI
+    registry = CommandRegistry(build_command_specs())
+    checker = ReadinessChecker(project_root, {})
+    for command_id in ("marketdata.quote", "marketdata.book"):
+        command = registry.get(command_id)
+        assert checker.check(command).status is ReadinessStatus.READY
+        assert command.handler_key in {"market_data_quote", "market_data_book"}
+    assert hasattr(TradingPlatformCLI, "_market_data_quote")
+    assert hasattr(TradingPlatformCLI, "_market_data_book")
