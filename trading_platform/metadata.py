@@ -95,6 +95,7 @@ class ABI(Model):
         if self.format.lower() != "json" or not isinstance(self.definition,list): raise MetadataError("ABI must use a JSON array definition")
         try: json.dumps(self.definition)
         except (TypeError,ValueError) as e: raise MetadataError("ABI definition must be JSON serializable") from e
+        _validate_abi_definition(self.definition)
 
 @dataclass
 class Contract(Model):
