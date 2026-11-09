@@ -18,6 +18,11 @@ class MetadataCLI:
         if command=="abi.link":
             c=self.service.get("contract",self.input("Contract ID: ").strip()); c.abi_id=self.input("ABI ID: ").strip()
             self.service.update(c); self.output("ABI linked to Contract."); return c
+        if command=="asset.link_token":
+            self.service.link_asset_token(self.input("Asset ID: ").strip(),self.input("Token ID: ").strip())
+            self.output("Token linked to Asset."); return
+        if command=="asset.tokens":
+            return self.show_many(self.service.tokens_for_asset(self.input("Asset ID: ").strip()))
         if command=="market.fees.configure": return self.create("fees")
         kind=command.split(".")[0]
         op=command.split(".")[-1]
