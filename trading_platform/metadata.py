@@ -188,9 +188,10 @@ class Market(Model):
     def validate(self):
         super().validate()
         if not isinstance(self.name,str) or not self.name.strip() or not isinstance(self.venue_id,str) or not self.venue_id or not isinstance(self.pair_id,str) or not self.pair_id: raise MetadataError("market name, venue_id and pair_id must be non-empty strings")
-        for field_name in ("market_type","provider_market_id","network_id","liquidity_pool","pool_contract_id"):
+        if not isinstance(self.market_type,str) or not self.market_type.strip(): raise MetadataError("market_type must be a non-empty string")
+        for field_name in ("provider_market_id","network_id","liquidity_pool","pool_contract_id"):
             value=getattr(self,field_name)
-            if value is not None and (not isinstance(value,str) or (field_name=="market_type" and not value.strip())): raise MetadataError(f"{field_name} must be a string"+(" and non-empty" if field_name=="market_type" else "")+" or null")
+            if value is not None and not isinstance(value,str): raise MetadataError(f"{field_name} must be a string or null")
         if self.pool_fee_tier is not None and not 0 <= self.pool_fee_tier <= 1: raise MetadataError("pool fee must be between 0 and 1")
 
 @dataclass
