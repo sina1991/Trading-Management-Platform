@@ -152,3 +152,59 @@ def test_storage_status_and_integrity(tmp_path):
     assert status["foreign_keys"] is True
     assert status["integrity"]==["ok"]
     store.close()
+
+
+def test_evm_address_is_checksum_canonical_and_duplicate_identity(tmp_path):
+    store,svc=setup(tmp_path)
+    n=svc.add(Network(name="Ethereum",chain_id=1))
+    lower="0x"+"a"*40
+    first=svc.add(Contract(name="lower",network_id=n.id,address=lower))
+    assert first.address.startswith("0x")
+    assert first.address != lower
+    with pytest.raises(DuplicateError):
+        svc.add(Contract(name="upper",network_id=n.id,address="0x"+"A"*40))
+    store.close()
+
+def test_abi_structure_is_validated_and_checksum_recomputed_on_update(tmp_path):
+    store,svc=setup(tmp_path)
+    with pytest.raises(MetadataError):
+        svc.add(ABI(name="bad",definition=[{"type":"function","inputs":[{"name":"x"}]}]))
+    item=svc.add(ABI(name="good",definition=[{"type":"function","name":"f","inputs":[]}]))
+    old=item.checksum
+    item.definition=[{"type":"function","name":"g","inputs":[]}]
+    updated=svc.update(item)
+    assert updated.checksum != old
+    store.close()
+
+def test_metadata_secret_key_normalization_and_string_types():
+    for key in ("api-key","Authorization","client_secret","private-key","accessToken"):
+        with pytest.raises(MetadataError):
+            Asset(name="A",symbol="A",metadata={key:"sensitive"}).validate()
+    with pytest.raises(MetadataError):
+        Network(name=123,chain_id=1).validate()
+    with pytest.raises(MetadataError):
+        Contract(name="contract",network_id="net",address=123).validate()
+
+def test_sqlite_trigger_rejects_cross_network_token_contract_direct_store(tmp_path):
+    store,svc=setup(tmp_path)
+    n1=svc.add(Network(name="one",chain_id=1))
+    n2=svc.add(Network(name="two",chain_id=2))
+    c=svc.add(Contract(name="contract",network_id=n1.id,address="0x"+"b"*40))
+    with pytest.raises(RelationshipError):
+        store.create(Token(name="bad",symbol="BAD",network_id=n2.id,contract_id=c.id,standard="ERC20"))
+    store.close()
+
+def test_schema_v1_to_v2_migration_is_idempotent_and_preserves_records(tmp_path):
+    store,svc=setup(tmp_path)
+    network=svc.add(Network(name="saved",chain_id=987))
+    store.db.execute("UPDATE schema_version SET version=1")
+    store.db.commit()
+    store.close()
+    store=SQLiteStore(tmp_path/"metadata.sqlite3")
+    assert store.schema_version()==2
+    assert store.get("network",network.id).name=="saved"
+    assert store.integrity_check()==["ok"]
+    store.close()
+    store=SQLiteStore(tmp_path/"metadata.sqlite3")
+    assert store.schema_version()==2
+    store.close()
