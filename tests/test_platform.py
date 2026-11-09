@@ -91,3 +91,11 @@ def test_cli_blocks_unimplemented_command(project_root):
 @pytest.fixture
 def project_root():
     return Path(__file__).resolve().parents[1]
+
+
+def test_project_structure_inspector_is_reachable_from_readiness_menu(project_root):
+    output = []
+    choices = iter(["15", "2", "0", "0"])
+    cli = TradingPlatformCLI(project_root, input_fn=lambda _: next(choices), output_fn=output.append)
+    cli.run()
+    assert any("PROJECT STRUCTURE INSPECTOR" in item for item in output)

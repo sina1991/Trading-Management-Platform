@@ -48,9 +48,8 @@ class TradingPlatformCLI:
             if choice < 0:
                 continue
             menu_id, title = MAIN_MENU[choice - 1]
-            if menu_id in {"system", "readiness", "roadmap"}:
-                command_id = {"system": "system.status", "readiness": "project.readiness",
-                              "roadmap": "roadmap.view"}[menu_id]
+            if menu_id in {"system", "roadmap"}:
+                command_id = {"system": "system.status", "roadmap": "roadmap.view"}[menu_id]
                 self._dispatch(command_id)
             else:
                 self._submenu(menu_id, title)
