@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from trading_platform.metadata import (Network, ABI, Contract, Token, Asset, TradingPair, TradingVenue, Market, FeeMetadata, MetadataError, RelationshipError, DuplicateError)
+from trading_platform.metadata import (Network, ABI, Contract, Token, Asset, TradingPair, TradingVenue, Market, FeeMetadata, MetadataError, RelationshipError, DuplicateError, NotFoundError)
 from trading_platform.persistence import SQLiteStore
 from trading_platform.services import MetadataService
 
