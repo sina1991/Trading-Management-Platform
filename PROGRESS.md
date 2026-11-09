@@ -7,7 +7,7 @@
 > **Default branch:** `main`  
 > **Last updated:** 2026-11-09  
 > **Current phase:** Phase 1 — v1 foundation implementation  
-> **Overall status:** `IMPLEMENTATION IN PROGRESS` — source files are being added; verification will be reported only after tests/CI are observed.
+> **Overall status:** `IMPLEMENTED — VERIFICATION PENDING` — v1 foundation, CLI, command catalog, readiness checks, tests, documentation, and CI workflow are committed; runtime verification is not yet confirmed.
 
 ---
 
@@ -21,10 +21,10 @@
 | Repository archived | No |
 | Repository size at audit | 0 (before this file was committed) |
 | GitHub integration permissions | Admin, maintain, pull, push, triage |
-| Existing application files | None found during the initial repository audit |
+| Existing application files | v1 foundation committed; see implementation commits in Progress Log |
 | Existing README | None; initial README lookup returned 404 |
-| Application implementation | Not started |
-| Tests | Not created or run |
+| Application implementation | v1 foundation committed; runtime verification pending |
+| Tests | Test suite committed; execution result not yet verified |
 | Deployment | Not configured |
 
 **Important:** The repository being empty means there is no existing codebase to preserve or refactor. Do not claim that any application feature, test, dependency, deployment, or integration is implemented until it has been created and verified.
@@ -203,11 +203,11 @@ Commit the progress update together with the work it describes when practical. I
 - Created this `PROGRESS.md` as the initial agent handoff and continuity record.
 
 **Not completed / not claimed**
-- No application source code or package structure has been created.
-- No dependency selection has been finalized.
-- No tests, static checks, or application runtime have been created or run.
+- The v1 source package, core services, CLI, domain boundaries, tests, and documentation have been committed.
+- Runtime dependencies are intentionally minimal: tomli only on Python 3.10; pytest is a development extra.
+- Automated tests and a GitHub Actions workflow are committed; no successful test run has been observed yet.
 - No exchange, DEX, wallet, blockchain, or trading integration exists.
-- No deployment or CI pipeline has been configured.
+- No deployment is configured; GitHub Actions CI workflow is present, with run status pending verification.
 
 **Security / repository note**
 - The repository is currently Public. This was observed, not changed. Before adding credentials, private operational data, or sensitive deployment details, the owner should decide whether Public visibility is appropriate. Never commit secrets, even if repository visibility is changed.
@@ -229,7 +229,7 @@ The user explicitly authorized preparation and implementation of the v1 foundati
 
 ## 7. Next Recommended Work Item
 
-**Task:** Complete Phase 0 architecture and implementation blueprint before creating the application skeleton.
+**Task:** Verify the committed v1 implementation by running pytest locally or inspecting GitHub Actions; fix any failures before declaring v1 complete.
 
 **Expected output:**
 1. Proposed repository directory/package tree.
@@ -249,7 +249,7 @@ The user explicitly authorized preparation and implementation of the v1 foundati
 - Each planned feature has observable acceptance criteria.
 - Open questions and decisions requiring owner approval are separated from routine engineering choices.
 
-**Do not begin broad implementation until this blueprint has been reviewed against the supplied brief.** Routine tooling choices can be confirmed by the agent and reported to the owner.
+**Do not implement live exchange/DEX, wallet, blockchain, algorithmic, or real-money execution features in v1.**
 
 ## 8. Required Handoff Report Format
 
@@ -300,3 +300,41 @@ User approval required:
 8. Update this file so another agent can resume without relying on chat history.
 9. Clearly label assumptions, proposals, verified facts, and user-approved decisions.
 10. If blocked, stop safely, document the blocker and evidence, and provide the smallest useful next action.
+
+
+### 2026-11-09 — v1 foundation implementation committed
+
+**Implemented**
+- Python 3.10+ package and module entry point: `python -m trading_platform`.
+- Modular Monolith foundations: Core, CLI, Configuration, Monitoring, and explicit future domain package boundaries.
+- Complete 16-area main menu and 70+ command definitions covering the operations listed in the source brief.
+- Central Command Registry with duplicate-ID validation.
+- Per-command Readiness Checker with all seven required statuses.
+- Safe CLI dispatch: only READY commands with a registered handler may execute.
+- Operational foundation commands: System Status, Project Readiness, Project Structure Inspector, View Configuration, Validate Configuration, View Logs, Platform Status, Development Roadmap.
+- TOML example configuration, environment log-level override, and file logging.
+- Automated tests for catalog, registry, readiness statuses, configuration, project inspection, CLI startup, and non-READY command blocking.
+- Documentation: README, ARCHITECTURE, MODULES, CLI, READINESS, ROADMAP.
+- GitHub Actions test workflow for Python 3.10, 3.11, and 3.12.
+
+**Implementation commits**
+- `e3bf70d12bbf1fb4cf22c199fa69716f5827ef76` — core and configuration foundation.
+- `baa8c1207dbbb58a6cdc3af5be3958f44466b62e` — command catalog and interactive CLI.
+- `1d7e4965b1ab0e8c6212e35c6606483253c9baad` — documentation and CI workflow.
+- `67b5bcf6def9e2a404d634f2840e7766c4eef6eb` — future domain boundaries and environment example.
+
+**Verification state**
+- GitHub repository contents and commit references are confirmed.
+- Local clone/test execution was attempted but the execution environment could not resolve github.com; therefore pytest has not been run locally.
+- The Actions runs API returned zero workflow runs at the time checked. Do not claim CI is green.
+- Static source review is not a substitute for runtime verification.
+
+**Not implemented by design**
+- Live CEX/DEX connectivity, Wallet operations, blockchain transactions, trading algorithms, Bot lifecycle execution, order/transaction execution, and real-money trading.
+
+**Next task**
+1. Verify GitHub Actions is enabled and that the workflow is detected.
+2. Obtain a test run on Python 3.10, 3.11, and 3.12.
+3. Fix failures, then update this file with exact workflow/run evidence.
+4. Perform manual CLI acceptance checks.
+
