@@ -172,3 +172,128 @@ def test_response_size_is_bounded():
     provider = CoinbaseAdvancedTradeProvider(opener=lambda *a, **k: LargeResponse({}))
     with pytest.raises(MarketDataUnavailable):
         provider.get_order_book("BTC-USD")
+
+
+@pytest.mark.parametrize("product_id", [None, "", "   "])
+def test_coinbase_response_missing_or_empty_product_id_is_rejected(product_id):
+    payload = valid_payload()
+    if product_id is None:
+        payload["pricebook"].pop("product_id")
+    else:
+        payload["pricebook"]["product_id"] = product_id
+    provider = CoinbaseAdvancedTradeProvider(opener=fake_opener(payload, {}))
+    with pytest.raises(InvalidMarketData, match="product_id"):
+        provider.get_order_book("BTC-USD")
+
+
+@pytest.mark.parametrize("timestamp", [None, "", "not-a-timestamp"])
+def test_coinbase_response_missing_empty_or_malformed_timestamp_is_rejected(timestamp):
+    payload = valid_payload()
+    if timestamp is None:
+        payload["pricebook"].pop("time")
+        payload.pop("time", None)
+    else:
+        payload["pricebook"]["time"] = timestamp
+    provider = CoinbaseAdvancedTradeProvider(opener=fake_opener(payload, {}))
+    with pytest.raises(InvalidMarketData):
+        provider.get_order_book("BTC-USD")
+
+
+def test_unknown_exchange_timestamp_has_explicit_unknown_freshness():
+    now = datetime(2026, 11, 9, 12, 1, tzinfo=timezone.utc)
+    book = OrderBookSnapshot(
+        provider="test", product_id="BTC-USD",
+        bids=(OrderBookLevel(Decimal("99"), Decimal("1")),),
+        asks=(OrderBookLevel(Decimal("101"), Decimal("1")),),
+        received_at=now, exchange_timestamp=None,
+    )
+    assert book.age_seconds(now) is None
+    assert book.is_stale(max_age_seconds=10, now=now) is None
+
+
+def test_future_exchange_timestamp_is_invalid_not_fresh():
+    now = datetime(2026, 11, 9, 12, 1, tzinfo=timezone.utc)
+    future = now + timedelta(seconds=1)
+    book = OrderBookSnapshot(
+        provider="test", product_id="BTC-USD",
+        bids=(OrderBookLevel(Decimal("99"), Decimal("1")),),
+        asks=(OrderBookLevel(Decimal("101"), Decimal("1")),),
+        received_at=now, exchange_timestamp=future,
+    )
+    with pytest.raises(InvalidMarketData, match="future"):
+        book.age_seconds(now)
+    with pytest.raises(InvalidMarketData, match="future"):
+        book.is_stale(max_age_seconds=10, now=now)
+
+
+def test_valid_exchange_timestamp_freshness_is_deterministic():
+    now = datetime(2026, 11, 9, 12, 1, tzinfo=timezone.utc)
+    exchange = now - timedelta(seconds=30)
+    book = OrderBookSnapshot(
+        provider="test", product_id="BTC-USD",
+        bids=(OrderBookLevel(Decimal("99"), Decimal("1")),),
+        asks=(OrderBookLevel(Decimal("101"), Decimal("1")),),
+        received_at=now, exchange_timestamp=exchange,
+    )
+    assert book.age_seconds(now) == 30.0
+    assert book.is_stale(max_age_seconds=10, now=now) is True
+    assert book.is_stale(max_age_seconds=60, now=now) is False
+
+
+def test_redirect_handler_refuses_redirects():
+    from urllib.request import Request
+    from trading_platform.connectors.coinbase_advanced_trade import _NoRedirectHandler
+    handler = _NoRedirectHandler()
+    request = Request(BASE_URL + "/product_book?product_id=BTC-USD")
+    assert handler.redirect_request(request, object(), 302, "Found", {}, "https://unexpected.example/")
+        is None
+
+
+def test_cli_order_book_shows_exchange_receipt_and_freshness(monkeypatch, tmp_path):
+    from trading_platform.cli import TradingPlatformCLI
+    book = OrderBookSnapshot(
+        provider="test", product_id="BTC-USD",
+        bids=(OrderBookLevel(Decimal("99"), Decimal("1")),),
+        asks=(OrderBookLevel(Decimal("101"), Decimal("1")),),
+        received_at=datetime(2026, 11, 9, 12, 1, tzinfo=timezone.utc),
+        exchange_timestamp=datetime(2026, 11, 9, 12, 0, 30, tzinfo=timezone.utc),
+    )
+    class FakeProvider:
+        def get_order_book(self, product_id):
+            return book
+    monkeypatch.setattr(
+        "trading_platform.connectors.coinbase_advanced_trade.CoinbaseAdvancedTradeProvider",
+        lambda: FakeProvider(),
+    )
+    output = []
+    cli = TradingPlatformCLI(tmp_path, input_fn=lambda _: "BTC-USD", output_fn=output.append)
+    cli._market_data_book()
+    rendered = "\\n".join(output)
+    assert "Exchange timestamp:" in rendered
+    assert "Local receipt time:" in rendered
+    assert "Data age / freshness:" in rendered
+    assert "UNKNOWN" not in rendered
+
+
+def test_cli_order_book_displays_unknown_freshness(monkeypatch, tmp_path):
+    from trading_platform.cli import TradingPlatformCLI
+    book = OrderBookSnapshot(
+        provider="test", product_id="BTC-USD",
+        bids=(OrderBookLevel(Decimal("99"), Decimal("1")),),
+        asks=(OrderBookLevel(Decimal("101"), Decimal("1")),),
+        received_at=datetime(2026, 11, 9, 12, 1, tzinfo=timezone.utc),
+        exchange_timestamp=None,
+    )
+    class FakeProvider:
+        def get_order_book(self, product_id):
+            return book
+    monkeypatch.setattr(
+        "trading_platform.connectors.coinbase_advanced_trade.CoinbaseAdvancedTradeProvider",
+        lambda: FakeProvider(),
+    )
+    output = []
+    cli = TradingPlatformCLI(tmp_path, input_fn=lambda _: "BTC-USD", output_fn=output.append)
+    cli._market_data_book()
+    rendered = "\\n".join(output)
+    assert "Exchange timestamp: UNKNOWN" in rendered
+    assert "Data age / freshness: UNKNOWN" in rendered
