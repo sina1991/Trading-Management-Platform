@@ -99,3 +99,24 @@ def test_project_structure_inspector_is_reachable_from_readiness_menu(project_ro
     cli = TradingPlatformCLI(project_root, input_fn=lambda _: next(choices), output_fn=output.append)
     cli.run()
     assert any("PROJECT STRUCTURE INSPECTOR" in item for item in output)
+
+
+def test_metadata_readiness_reports_corrupt_database(tmp_path):
+    from trading_platform.core import CommandSpec, ReadinessStatus
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    (data_dir / "metadata.sqlite3").write_bytes(b"not a sqlite database")
+    command = CommandSpec("metadata.test", "Metadata", "test", "storage",
+                          "implemented", "metadata_dispatch")
+    checker = ReadinessChecker(tmp_path, {"storage": {"data_dir": str(data_dir)}})
+    assert checker.check(command).status is ReadinessStatus.STORAGE_ERROR
+
+def test_metadata_readiness_does_not_create_uninitialized_database(tmp_path):
+    from trading_platform.core import CommandSpec, ReadinessStatus
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    command = CommandSpec("metadata.test", "Metadata", "test", "storage",
+                          "implemented", "metadata_dispatch")
+    checker = ReadinessChecker(tmp_path, {"storage": {"data_dir": str(data_dir)}})
+    assert checker.check(command).status is ReadinessStatus.READY
+    assert not (data_dir / "metadata.sqlite3").exists()

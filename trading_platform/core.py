@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Callable
 import platform
 import sys
+import sqlite3
 
 
 class ReadinessStatus(str, Enum):
@@ -16,6 +17,7 @@ class ReadinessStatus(str, Enum):
     MISSING_DEPENDENCIES = "MISSING DEPENDENCIES"
     CONFIGURATION_ERROR = "CONFIGURATION ERROR"
     DEPENDENCY_ERROR = "DEPENDENCY ERROR"
+    STORAGE_ERROR = "STORAGE ERROR"
 
 
 @dataclass(frozen=True)
@@ -135,6 +137,32 @@ class ReadinessChecker:
                                            tuple(checks), (f"{name}: {type(exc).__name__}",),
                                            "Dependency health check raised an error.")
 
+        if command.handler_key == "metadata_dispatch":
+            storage = self.config.get("storage", {})
+            data_dir = storage.get("data_dir") if isinstance(storage, dict) else None
+            if isinstance(data_dir, str) and data_dir.strip():
+                folder = Path(data_dir).expanduser()
+                if not folder.is_absolute(): folder = self.project_root / folder
+                database = folder / "metadata.sqlite3"
+                if database.exists():
+                    try:
+                        connection = sqlite3.connect(f"file:{database.resolve().as_posix()}?mode=ro", uri=True, timeout=2)
+                        try:
+                            integrity = [row[0] for row in connection.execute("PRAGMA integrity_check")]
+                            violations = list(connection.execute("PRAGMA foreign_key_check"))
+                        finally:
+                            connection.close()
+                        if integrity != ["ok"] or violations:
+                            return ReadinessReport(command.command_id, ReadinessStatus.STORAGE_ERROR,
+                                                   tuple(checks), (str(database),),
+                                                   "Metadata database integrity or foreign-key checks failed.")
+                        checks.append("Metadata database is reachable and passes integrity checks.")
+                    except sqlite3.Error as exc:
+                        return ReadinessReport(command.command_id, ReadinessStatus.STORAGE_ERROR,
+                                               tuple(checks), (f"{database}: {type(exc).__name__}",),
+                                               "Metadata database cannot be inspected.")
+                else:
+                    checks.append("Metadata database is not initialized; first use will initialize it.")
         if not command.handler_key:
             return ReadinessReport(command.command_id, ReadinessStatus.NOT_IMPLEMENTED,
                                    tuple(checks), message="No execution handler is registered.")
