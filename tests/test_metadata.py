@@ -212,3 +212,14 @@ def test_schema_v1_to_v2_migration_is_idempotent_and_preserves_records(tmp_path)
     store=SQLiteStore(tmp_path/"metadata.sqlite3")
     assert store.schema_version()==2
     store.close()
+
+
+def test_evm_contract_address_is_canonicalized_on_update(tmp_path):
+    store,svc=setup(tmp_path)
+    n=svc.add(Network(name="Ethereum",chain_id=1))
+    contract=svc.add(Contract(name="C",network_id=n.id,address="0x"+"b"*40))
+    contract.address="0x"+"C"*40
+    updated=svc.update(contract)
+    from eth_utils import to_checksum_address
+    assert updated.address==to_checksum_address("0x"+"C"*40)
+    store.close()
