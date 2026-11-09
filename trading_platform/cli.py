@@ -1,5 +1,6 @@
 """Interactive CLI. Non-READY operations are display-only and never dispatched."""
 from pathlib import Path
+from datetime import datetime, timezone
 import logging
 
 from trading_platform.catalog import MAIN_MENU, build_command_specs
@@ -11,6 +12,16 @@ from trading_platform.monitoring import configure_logging
 def _header(title: str) -> str:
     line = "=" * 58
     return f"{line}\n{title.center(58)}\n{line}"
+
+def _freshness_display(exchange_timestamp, received_at) -> str:
+    if exchange_timestamp is None:
+        return "UNKNOWN (exchange timestamp unavailable)"
+    if exchange_timestamp.tzinfo is None or received_at.tzinfo is None:
+        return "INVALID (timestamps must be timezone-aware)"
+    age = (datetime.now(timezone.utc) - exchange_timestamp).total_seconds()
+    if age < 0:
+        return "INVALID (exchange timestamp is in the future)"
+    return f"{age:.3f} seconds"
 
 
 class TradingPlatformCLI:
@@ -170,7 +181,9 @@ class TradingPlatformCLI:
         self.output(f"Best ask: {quote.ask} (size {quote.ask_size})")
         self.output(f"Midpoint: {quote.midpoint}")
         self.output(f"Spread: {quote.spread} ({quote.spread_bps:.4f} bps)")
-        self.output(f"Received at: {quote.received_at.isoformat()}")
+        self.output(f"Exchange timestamp: {quote.exchange_timestamp.isoformat() if quote.exchange_timestamp else 'UNKNOWN'}")
+        self.output(f"Local receipt time: {quote.received_at.isoformat()}")
+        self.output(f"Data age / freshness: {_freshness_display(quote.exchange_timestamp, quote.received_at)}")
         self.output("READ-ONLY SNAPSHOT — no order was created or submitted.")
 
     def _market_data_book(self) -> None:
@@ -192,7 +205,9 @@ class TradingPlatformCLI:
         self.output("ASKS")
         for level in book.asks:
             self.output(f"  {level.price} x {level.size}")
-        self.output(f"Received at: {book.received_at.isoformat()}")
+        self.output(f"Exchange timestamp: {book.exchange_timestamp.isoformat() if book.exchange_timestamp else 'UNKNOWN'}")
+        self.output(f"Local receipt time: {book.received_at.isoformat()}")
+        self.output(f"Data age / freshness: {_freshness_display(book.exchange_timestamp, book.received_at)}")
         self.output("READ-ONLY SNAPSHOT — no order was created or submitted.")
 
     def _roadmap(self) -> None:
