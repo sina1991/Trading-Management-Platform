@@ -4,7 +4,7 @@
 **Default branch:** `main`  
 **Implementation branch:** `phase2/metadata-persistence` (merged)  
 **Phase:** Phase 2 complete; Phase A — Read-only Market Data  
-**Status:** Phase A implementation is on a draft PR; CI and live provider smoke test are pending.
+**Status:** Phase A implementation is on a draft PR; implementation CI passed on Python 3.10/3.11/3.12; live provider smoke test is pending.
 
 ## Initial audit
 
