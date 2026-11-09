@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from trading_platform.metadata import (Network, ABI, Contract, Token, Asset, TradingPair, TradingVenue, Market, FeeMetadata, MetadataError, RelationshipError, DuplicateError)
+from trading_platform.metadata import (Network, ABI, Contract, Token, Asset, TradingPair, TradingVenue, Market, FeeMetadata, MetadataError, RelationshipError, DuplicateError, NotFoundError)
 from trading_platform.persistence import SQLiteStore
 from trading_platform.services import MetadataService
 
@@ -238,3 +238,66 @@ def test_model_rejects_invalid_optional_and_enum_field_types():
         Asset(name="A",symbol="A",description=[]).validate()
     with pytest.raises(MetadataError):
         Market(name="M",venue_id="v",pair_id="p",market_type=None).validate()
+
+
+def test_delete_restrictions_cover_all_metadata_relationships(tmp_path):
+    store,svc=setup(tmp_path)
+    network=svc.add(Network(name="Network",chain_id=1))
+    contract=svc.add(Contract(name="Pool",network_id=network.id,address="0x"+"d"*40))
+    token=svc.add(Token(name="Token",symbol="TOK",network_id=network.id,contract_id=contract.id,standard="ERC20"))
+    base=svc.add(Asset(name="Base",symbol="B"))
+    quote=svc.add(Asset(name="Quote",symbol="Q"))
+    pair=svc.add(TradingPair(base_asset_id=base.id,quote_asset_id=quote.id))
+    venue=svc.add(TradingVenue(name="DEX",venue_type="dex"))
+    market=svc.add(Market(name="B-Q",venue_id=venue.id,pair_id=pair.id,network_id=network.id,pool_contract_id=contract.id))
+    fee=svc.add(FeeMetadata(market_id=market.id,dex_pool_fee=.003))
+    for kind,entity_id in (("network",network.id),("contract",contract.id),("asset",base.id),
+                           ("venue",venue.id),("pair",pair.id)):
+        with pytest.raises(RelationshipError):
+            svc.delete(kind,entity_id)
+    svc.delete("market",market.id)
+    assert store.list("fees")==[]  # Market deletion cascades its fee record.
+    store.close()
+
+def test_network_scoped_relationships_are_checked_on_update_and_direct_store(tmp_path):
+    store,svc=setup(tmp_path)
+    n1=svc.add(Network(name="one",chain_id=1))
+    n2=svc.add(Network(name="two",chain_id=2))
+    contract=svc.add(Contract(name="pool",network_id=n1.id,address="0x"+"e"*40))
+    token=svc.add(Token(name="T",symbol="T",network_id=n1.id,contract_id=contract.id,standard="ERC20"))
+    asset1=svc.add(Asset(name="A",symbol="A")); asset2=svc.add(Asset(name="B",symbol="B"))
+    pair=svc.add(TradingPair(base_asset_id=asset1.id,quote_asset_id=asset2.id))
+    venue=svc.add(TradingVenue(name="DEX",venue_type="dex"))
+    market=svc.add(Market(name="A-B",venue_id=venue.id,pair_id=pair.id,network_id=n1.id,pool_contract_id=contract.id))
+    token.network_id=n2.id
+    with pytest.raises(RelationshipError): svc.update(token)
+    market.network_id=n2.id
+    with pytest.raises(RelationshipError): store.update(market)
+    store.close()
+
+def test_metadata_cli_crud_confirmation_and_json_error(tmp_path):
+    from trading_platform.metadata_cli import MetadataCLI
+    inputs=iter(['{"name":"CLI Network","chain_id":777}', 'not-json'])
+    output=[]
+    adapter=MetadataCLI(tmp_path,{"storage":{"data_dir":"data"}},
+                        input_fn=lambda prompt: next(inputs),output_fn=output.append)
+    item=adapter.execute("network.add")
+    assert adapter.service.get("network",item.id).name=="CLI Network"
+    assert any("Created network" in line for line in output)
+    with pytest.raises(MetadataError):
+        adapter.execute("network.add")  # Malformed JSON is surfaced as a domain validation error.
+    adapter.close()
+
+def test_metadata_cli_delete_cancel_then_confirm(tmp_path):
+    from trading_platform.metadata_cli import MetadataCLI
+    adapter=MetadataCLI(tmp_path,{"storage":{"data_dir":"data"}},input_fn=lambda _: "",output_fn=lambda _: None)
+    item=adapter.service.add(Network(name="CLI",chain_id=778))
+    inputs=iter([item.id,"NO"])
+    adapter.input=lambda prompt: next(inputs)
+    adapter.execute("network.delete")
+    assert adapter.service.get("network",item.id).name=="CLI"
+    inputs=iter([item.id,"DELETE"])
+    adapter.input=lambda prompt: next(inputs)
+    adapter.execute("network.delete")
+    with pytest.raises(NotFoundError): adapter.service.get("network",item.id)
+    adapter.close()
