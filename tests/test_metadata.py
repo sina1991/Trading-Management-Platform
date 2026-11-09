@@ -197,7 +197,11 @@ def test_sqlite_trigger_rejects_cross_network_token_contract_direct_store(tmp_pa
 def test_schema_v1_to_v2_migration_is_idempotent_and_preserves_records(tmp_path):
     store,svc=setup(tmp_path)
     network=svc.add(Network(name="saved",chain_id=987))
-    store.db.execute("DROP TRIGGER IF EXISTS tokens_contract_network_insert")\n    store.db.execute("DROP TRIGGER IF EXISTS tokens_contract_network_update")\n    store.db.execute("DROP TRIGGER IF EXISTS markets_pool_network_insert")\n    store.db.execute("DROP TRIGGER IF EXISTS markets_pool_network_update")\n    store.db.execute("UPDATE schema_version SET version=1")
+    store.db.execute("DROP TRIGGER IF EXISTS tokens_contract_network_insert")
+    store.db.execute("DROP TRIGGER IF EXISTS tokens_contract_network_update")
+    store.db.execute("DROP TRIGGER IF EXISTS markets_pool_network_insert")
+    store.db.execute("DROP TRIGGER IF EXISTS markets_pool_network_update")
+    store.db.execute("UPDATE schema_version SET version=1")
     store.db.commit()
     store.close()
     store=SQLiteStore(tmp_path/"metadata.sqlite3")
