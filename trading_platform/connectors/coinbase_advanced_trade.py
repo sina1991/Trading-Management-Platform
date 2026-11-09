@@ -10,7 +10,7 @@ import re
 from typing import Callable
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener, urlopen
 
 from trading_platform.connectors.market_data import MarketDataProvider
 from trading_platform.markets.market_data import (
@@ -22,13 +22,24 @@ from trading_platform.markets.market_data import (
 )
 
 BASE_URL = "https://api.coinbase.com/api/v3/brokerage/market"
+
+
+class _NoRedirectHandler(HTTPRedirectHandler):
+    """Reject redirects instead of following a response to another host."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _open_without_redirects(request: Request, timeout: float):
+    return build_opener(_NoRedirectHandler()).open(request, timeout=timeout)
+
+
 _PRODUCT_ID = re.compile(r"^[A-Z0-9]{2,15}-[A-Z0-9]{2,15}$")
 
 
 def _timestamp(value: object) -> datetime | None:
-    if value is None:
-        return None
-    if not isinstance(value, str):
+    if not isinstance(value, str) or not value.strip():
         raise InvalidMarketData("Provider timestamp must be a string")
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
@@ -60,7 +71,7 @@ class CoinbaseAdvancedTradeProvider(MarketDataProvider):
     provider_name = "coinbase_advanced_trade"
 
     def __init__(self, timeout: float = 8.0,
-                 opener: Callable = urlopen) -> None:
+                 opener: Callable = _open_without_redirects) -> None:
         if not isinstance(timeout, (int, float)) or timeout <= 0:
             raise ValueError("timeout must be positive")
         self.timeout = float(timeout)
@@ -112,7 +123,9 @@ class CoinbaseAdvancedTradeProvider(MarketDataProvider):
         book = payload.get("pricebook", payload)
         if not isinstance(book, dict):
             raise InvalidMarketData("Coinbase response is missing pricebook data")
-        returned_product = book.get("product_id", product_id)
+        returned_product = book.get("product_id")
+        if not isinstance(returned_product, str) or not returned_product.strip():
+            raise InvalidMarketData("Coinbase response is missing product_id")
         if returned_product != product_id:
             raise InvalidMarketData("Coinbase returned a different product ID")
         raw_bids, raw_asks = book.get("bids"), book.get("asks")
@@ -122,7 +135,10 @@ class CoinbaseAdvancedTradeProvider(MarketDataProvider):
                             key=lambda item: item.price, reverse=True)[:limit])
         asks = tuple(sorted((_level(item) for item in raw_asks),
                             key=lambda item: item.price)[:limit])
-        exchange_timestamp = _timestamp(book.get("time") or payload.get("time"))
+        timestamp_value = book.get("time")
+        if timestamp_value is None:
+            timestamp_value = payload.get("time")
+        exchange_timestamp = _timestamp(timestamp_value)
         return OrderBookSnapshot(
             provider=self.provider_name,
             product_id=product_id,
