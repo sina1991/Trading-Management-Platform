@@ -15,7 +15,7 @@
 - [x] Venue-specific CEX/DEX market metadata and distinct fee fields
 - [x] SQLite repositories, schema version, foreign keys, CRUD and integrity checks
 - [x] CLI integration through the existing Command Registry
-- [ ] Automated verification on all supported Python versions and final CI confirmation
+- [x] Automated verification on Python 3.10, 3.11, and 3.12 (30 tests passed in each CI job)
 
 ## Phase 3 — Strategy and Bot metadata
 
