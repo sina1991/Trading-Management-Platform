@@ -71,3 +71,43 @@ print(quote.bid, quote.ask, quote.spread_bps)
 The adapter tests use a deterministic fake HTTP transport and do not call
 Coinbase. A live provider smoke test is deliberately kept separate from the
 unit-test suite so CI does not depend on exchange availability.
+
+
+## Timestamp validation and freshness
+
+The Coinbase Product Book response must contain a non-empty `product_id`
+matching the requested product and a usable exchange timestamp. The timestamp
+must be a non-empty ISO-8601 string with an explicit timezone; missing, empty,
+malformed, or timezone-naive values are rejected as `InvalidMarketData`.
+The provider does not substitute the requested product identifier or local
+receipt time for missing response fields.
+
+`OrderBookSnapshot.age_seconds(now)` measures age using the exchange timestamp
+only. If the exchange timestamp is unknown, it returns `None`; it does not
+fall back to `received_at`. `is_stale()` correspondingly returns `None` for
+unknown freshness. A timestamp later than the timezone-aware reference time is
+invalid and raises `InvalidMarketData`, never clamped to age zero. No clock-skew
+tolerance is applied. Local receipt time remains recorded independently.
+
+The CLI quote and order-book output includes **Exchange timestamp**, **Local
+receipt time**, and **Data age / freshness**. Unknown exchange time is shown as
+`UNKNOWN`; future or timezone-invalid data is shown as `INVALID`.
+
+## HTTP redirect policy
+
+The public adapter's HTTP opener rejects redirects rather than following them,
+so a response cannot redirect the GET request to an unexpected host. The fixed
+Coinbase API base URL and GET-only request method remain unchanged.
+
+## Deterministic test commands
+
+Run the complete suite without live Coinbase access:
+
+```bash
+python -m pip install -e ".[dev]"
+python -m pytest -q
+```
+
+The GitHub Actions workflow `.github/workflows/tests.yml` runs this suite on
+Python 3.10, 3.11, and 3.12. Tests use a fake HTTP transport; no credentials or
+live exchange smoke test are required or claimed.
