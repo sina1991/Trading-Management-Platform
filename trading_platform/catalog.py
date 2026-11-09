@@ -62,6 +62,8 @@ RAW_COMMANDS = [
 ("market.add","Add Market","Register a venue-specific market.","markets"),
 ("market.list","List Markets","List venue-specific markets.","markets"),
 ("market.find","Find Market","Find a market by venue and pair.","markets"),
+("marketdata.quote","Fetch Best Bid/Ask","Read a public Coinbase market quote.","markets"),
+("marketdata.book","Fetch Public Order Book","Read a public Coinbase order-book snapshot.","markets"),
 ("market.fees.configure","Configure Trading Fees","Configure venue fee metadata.","markets"),
 ("market.status","Market Status","Inspect market metadata status.","markets"),
 ("strategy.create","Create Strategy","Create a strategy definition.","strategies"),
@@ -171,6 +173,9 @@ PHASE2_COMMANDS = {
 }
 for _id in PHASE2_COMMANDS:
     ACTIVE[_id] = ("metadata_dispatch", ("trading_platform/metadata.py","trading_platform/persistence.py","trading_platform/services.py","trading_platform/metadata_cli.py"))
+
+ACTIVE["marketdata.quote"] = ("market_data_quote", ("trading_platform/connectors/coinbase_advanced_trade.py",))
+ACTIVE["marketdata.book"] = ("market_data_book", ("trading_platform/connectors/coinbase_advanced_trade.py",))
 
 
 def build_command_specs():

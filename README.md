@@ -6,7 +6,7 @@ An independent Python Modular Monolith for managing trading metadata and, in lat
 
 - Python 3.10+
 - SQLite (included in Python's standard library)
-- No live exchange, blockchain node, wallet, paid API, or external service is required.
+- The core metadata workflow requires no exchange account, blockchain node, wallet, or paid API. Phase A includes an optional unauthenticated, read-only Coinbase public market-data adapter.
 
 ```bash
 python -m venv .venv
@@ -30,6 +30,10 @@ Metadata create/update prompts accept a JSON object, for example:
 
 Identifiers are generated as UUIDs unless explicitly supplied. Use returned IDs when creating relationships. A Token is network-scoped; a Contract address is unique only within its Network; an Asset is an economic concept and can be associated with multiple Token records.
 
+## Phase A public market data
+
+The optional Coinbase Advanced Trade adapter reads public order-book snapshots using GET-only endpoints. It does not require credentials and cannot access accounts, balances, transfers, wallets, or order endpoints. It does not submit or cancel orders. See [Phase A market data](docs/PHASE_A_MARKET_DATA.md).
+
 ## Safety and backup
 
 - Never put RPC URLs containing credentials, API keys, passwords, private keys, or access tokens in metadata.
@@ -39,6 +43,6 @@ Identifiers are generated as UUIDs unless explicitly supplied. Use returned IDs 
 
 ## Scope exclusions
 
-No live exchange/DEX connectivity, wallet signing, live RPC, blockchain transaction submission, live market data, strategies, bot execution, order execution, or real-money trading is implemented in Phase 2. These remain future work.
+No authenticated exchange connectivity, DEX/RPC connectivity, wallet signing, blockchain transaction submission, strategy execution, bot execution, order execution, or real-money trading is implemented. Phase A's sole exchange integration is public read-only market data.
 
 See `docs/` for architecture, schema, CLI, readiness, decisions, and roadmap. `PROGRESS.md` records the verified repository state.

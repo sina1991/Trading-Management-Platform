@@ -3,8 +3,8 @@
 **Repository:** https://github.com/sina1991/Trading-Management-Platform  
 **Default branch:** `main`  
 **Implementation branch:** `phase2/metadata-persistence` (merged)  
-**Phase:** Phase 2 — Metadata Management & Persistence  
-**Status:** COMPLETE — merged into `main`; pull-request and main-branch CI verified.
+**Phase:** Phase 2 complete; Phase A — Read-only Market Data  
+**Status:** Phase A implementation is on a draft PR; implementation CI passed on Python 3.10/3.11/3.12; live provider smoke test is pending.
 
 ## Initial audit
 
@@ -79,3 +79,15 @@ No critical Phase 2 requirement remains identified by the automated test suite. 
 ## Recommended Phase 3
 
 Proceed only after a separate instruction: Strategy definitions and Bot Instance metadata/lifecycle management, keeping strategy logic independent of Bot lifecycle and Execution. Do not begin Phase 3 in this task.
+
+
+## Phase A — read-only public market data (implementation branch)
+
+- Selected Coinbase Advanced Trade public market-data API; no API key or account access.
+- Added a provider-neutral MarketDataProvider protocol and immutable Decimal-based quote/order-book models.
+- Added a GET-only Coinbase product-book adapter with product-ID validation, bounded timeout/response size, timestamp validation, and malformed/crossed-book rejection.
+- Added CLI actions for best bid/ask and order-book inspection.
+- Added deterministic fake-transport tests; these tests do not contact Coinbase.
+- Explicitly excluded authenticated/private endpoints, credentials, balances, wallets, transfers, orders, signing, execution, and persistence.
+- CI: implementation commit `ac8b9647eea1183b68ff6813b198ade7e4e8c777` passed all three Python matrix jobs. The current head adds only this handoff-status correction.
+- Pending: operator-approved live public-data smoke test.

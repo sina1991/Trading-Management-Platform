@@ -1,4 +1,5 @@
-"""Future connector contracts for CEX, DEX, network, wallet and RPC adapters.
+"""External provider adapters.
 
-No live adapter or credential-handling behavior is implemented in v1.
+Only explicitly public, read-only market-data adapters are currently active.
+No authenticated exchange, wallet, or execution adapter is implemented.
 """
