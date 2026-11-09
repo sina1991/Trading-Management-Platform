@@ -257,7 +257,6 @@ def test_delete_restrictions_cover_all_metadata_relationships(tmp_path):
             svc.delete(kind,entity_id)
     svc.delete("market",market.id)
     assert store.list("fees")==[]  # Market deletion cascades its fee record.
-    svc.delete("fees",fee.id) if False else None
     store.close()
 
 def test_network_scoped_relationships_are_checked_on_update_and_direct_store(tmp_path):
@@ -278,7 +277,7 @@ def test_network_scoped_relationships_are_checked_on_update_and_direct_store(tmp
 
 def test_metadata_cli_crud_confirmation_and_json_error(tmp_path):
     from trading_platform.metadata_cli import MetadataCLI
-    inputs=iter(['{"name":"CLI Network","chain_id":777}'])
+    inputs=iter(['{"name":"CLI Network","chain_id":777}', 'not-json'])
     output=[]
     adapter=MetadataCLI(tmp_path,{"storage":{"data_dir":"data"}},
                         input_fn=lambda prompt: next(inputs),output_fn=output.append)
@@ -286,7 +285,7 @@ def test_metadata_cli_crud_confirmation_and_json_error(tmp_path):
     assert adapter.service.get("network",item.id).name=="CLI Network"
     assert any("Created network" in line for line in output)
     with pytest.raises(MetadataError):
-        adapter.execute("network.add")  # EOF in input iterator becomes an error at the adapter boundary.
+        adapter.execute("network.add")  # Malformed JSON is surfaced as a domain validation error.
     adapter.close()
 
 def test_metadata_cli_delete_cancel_then_confirm(tmp_path):
