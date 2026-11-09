@@ -271,6 +271,11 @@ def test_cli_order_book_shows_exchange_receipt_and_freshness(monkeypatch, tmp_pa
     config_dir = tmp_path / "config"
     config_dir.mkdir()
     shutil.copyfile(Path(__file__).resolve().parents[1] / "config/platform.example.toml", config_dir / "platform.example.toml")
+    from pathlib import Path
+    import shutil
+    config_dir = tmp_path / "config"
+    config_dir.mkdir()
+    shutil.copyfile(Path(__file__).resolve().parents[1] / "config/platform.example.toml", config_dir / "platform.example.toml")
     output = []
     cli = TradingPlatformCLI(tmp_path, input_fn=lambda _: "BTC-USD", output_fn=output.append)
     cli._market_data_book()
