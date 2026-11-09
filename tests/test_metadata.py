@@ -223,3 +223,18 @@ def test_evm_contract_address_is_canonicalized_on_update(tmp_path):
     from eth_utils import to_checksum_address
     assert updated.address==to_checksum_address("0x"+"C"*40)
     store.close()
+
+
+def test_model_rejects_invalid_optional_and_enum_field_types():
+    with pytest.raises(MetadataError):
+        ABI(name="ABI",format=123).validate()
+    with pytest.raises(MetadataError):
+        Network(name="net",chain_id=1,status=[]).validate()
+    with pytest.raises(MetadataError):
+        Network(name="net",chain_id=1,rpc_config_ref=[]).validate()
+    with pytest.raises(MetadataError):
+        Contract(name="C",network_id="n",address="0x"+"a"*40,contract_type=[]).validate()
+    with pytest.raises(MetadataError):
+        Asset(name="A",symbol="A",description=[]).validate()
+    with pytest.raises(MetadataError):
+        Market(name="M",venue_id="v",pair_id="p",market_type=None).validate()
