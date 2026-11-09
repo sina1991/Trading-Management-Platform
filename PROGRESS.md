@@ -2,55 +2,79 @@
 
 **Repository:** https://github.com/sina1991/Trading-Management-Platform  
 **Default branch:** `main`  
-**Working branch:** `phase2/metadata-persistence`  
-**Audit date:** 2026-11-09  
+**Implementation branch:** `phase2/metadata-persistence`  
 **Phase:** Phase 2 — Metadata Management & Persistence  
-**Status:** Implementation committed to working branch; final tests and CI verification pending.
+**Status:** COMPLETE — implementation and automated CI verified; awaiting PR merge.
 
-## Verified baseline audit
+## Initial audit
 
-The live repository default branch was `main`. It contained a Python 3.10+ Modular Monolith, central CLI/Command Registry, seven-status Readiness Checker, TOML configuration, logging, project inspection, 13 foundation tests, and a Python 3.10/3.11/3.12 GitHub Actions workflow. Existing domain directories for registries, markets, and storage contained only package boundary files. The prior PROGRESS snapshot contained stale and internally contradictory statements (including an empty-repository snapshot and conflicting CI run references); this document supersedes those historical claims.
+The live default branch was `main`. It contained a Python 3.10+ Modular Monolith, CLI and central Command Registry, seven-status Readiness Checker, TOML configuration, logging, project inspection, 13 foundation tests, and a GitHub Actions matrix for Python 3.10/3.11/3.12. The registry, markets, and storage packages were initially placeholders. The prior progress snapshot had stale/contradictory state claims; the live repository was treated as source of truth.
 
-Reusable components retained: CLI, catalog, Command Registry, Readiness Checker, configuration manager, logging, packaging, and CI workflow. No unrelated Arbitrage project was inspected or used.
+Existing foundation components were retained. No external Arbitrage project or other trading project was inspected, copied, or used.
 
-## Phase 2 decisions
+## Phase 2 implementation
 
-- SQLite: embedded, no server or paid service, available in the Python standard library.
-- Domain models use UUID identifiers and UTC ISO-8601 timestamps; they contain no SQL-specific fields.
-- Application services depend on the MetadataStore Protocol; SQLiteStore is an adapter.
-- Tables use explicit foreign keys and scoped uniqueness. Contract address identity is (network, address); token identity is network-scoped rather than symbol-only.
-- ABI is independent and reusable. Asset-to-Token is many-to-many.
-- CEX and DEX Market metadata and fee categories remain distinct.
-- Migrations are schema-versioned and additive; startup never deletes or recreates the database.
-- RPC configuration is a reference only; credential-like metadata keys and URL-shaped RPC references are rejected.
-- CLI create/update input uses JSON objects to keep prompts deterministic and extensible. Destructive operations require explicit DELETE confirmation.
+- Typed domain models: Network, Token, Contract, ABI, Asset, TradingPair, TradingVenue, Market, FeeMetadata.
+- UUID identifiers, UTC timestamps, model validation, dictionary serialization/deserialization.
+- Application services and MetadataStore Protocol separated from SQLite-specific persistence.
+- SQLite schema version 1, CRUD repositories, JSON serialization, WAL, busy timeout, foreign-key enforcement, uniqueness constraints, status and integrity checks.
+- Network chain IDs are unique. Contract address identity is network-scoped. Native token symbols are network-scoped; contract tokens are scoped by network and contract. Trading pair and market identities are constrained by their domain relationships.
+- Token-to-Network and Contract-to-Network relationships, optional Token-to-Contract (same-network check), Contract-to-ABI, TradingPair-to-Assets, Asset-to-Token many-to-many, Market-to-Venue/Pair, and optional DEX network/pool references.
+- CEX and DEX market constraints and fee fields remain distinct. ABI definitions are independent, checksummed, and reusable.
+- EVM address shape validation. Credential-like keys in public metadata and URL-shaped RPC config references are rejected; no secrets are stored.
+- CLI command registry now exposes metadata CRUD, searches, ABI linking, Asset-Token association, and database status/schema/integrity operations. Destructive commands require explicit DELETE confirmation.
+- Documentation updated: README, ARCHITECTURE, MODULES, CLI, READINESS, ROADMAP, and this handoff report.
 
-## Implemented on this branch
+## Technical decisions
 
-- Typed Network, Token, Contract, ABI, Asset, TradingPair, TradingVenue, Market, and FeeMetadata models.
-- SQLite schema version 1, CRUD repositories, JSON serialization, foreign-key enforcement, WAL, busy timeout, status and integrity checks.
-- Application services for relationship validation, scoped searches, ABI checksums, asset-token associations, and fee/market constraints.
-- CLI command catalog entries and dispatch for metadata CRUD and storage inspection.
-- Tests for full workflow, persistence across reopening, scoped identity, invalid references, EVM address validation, CEX/DEX market constraints, fee distinctions, ABI checksum, and readiness registration.
-- README and architecture/module/CLI/readiness/roadmap documentation updated.
+1. SQLite chosen: embedded, free, standard library; no external service dependency.
+2. Repository Protocol separates application logic from SQLite implementation.
+3. Explicit foreign keys and scoped unique constraints enforce referential integrity even when called outside the CLI.
+4. JSON text columns support flexible metadata and standard JSON ABI definitions.
+5. Initial migration is additive and versioned; startup does not delete/recreate the database.
+6. CLI create/update uses JSON object prompts for predictable typed input and future extensibility.
+7. No real trading, exchange API, wallet, RPC, signing, transaction, market-data, or execution functionality was added.
 
-## Verification plan and current evidence
+## Verification
 
-- Run `pytest -q` locally where a repository checkout is available.
-- GitHub Actions matrix remains Python 3.10, 3.11, and 3.12.
-- The execution environment used for this session could not resolve github.com for git clone. GitHub repository API/connector access is available; CI verification will be performed through a pull request workflow run.
-- No test or CI success is claimed until the new branch workflow completes successfully.
+**GitHub Actions run:** https://github.com/sina1991/Trading-Management-Platform/actions/runs/42648912267  
+**Verified head commit:** `5781e1583438bc057a95cc85fb3f01f8e874e644`  
+**Conclusion:** SUCCESS  
+**Matrix:**
+- Python 3.10: 30 passed
+- Python 3.11: 30 passed
+- Python 3.12: 30 passed
 
-## Database and recovery
+The first CI attempt exposed a missing test fixture in the new test module (27 passed, 1 setup error). The fixture reference was corrected, and the subsequent complete matrix passed. The later test additions were included in the successful run above.
 
-Default database: `data/metadata.sqlite3`, configurable through `[storage].data_dir`. Tables: networks, tokens, contracts, abis, assets, trading_pairs, venues, markets, fee_metadata, asset_tokens, schema_version. Before migrations or manual database maintenance, stop the application and back up the database. With WAL active, close/checkpoint before copying a single database file, or retain WAL/SHM files for a live copy. Restore only with the application stopped.
+A local git clone was unavailable because the execution environment could not resolve github.com. GitHub API/connector inspection and remote GitHub Actions supplied repository and runtime verification.
 
-## Scope boundaries
+## Database
 
-Not implemented by design: exchange/DEX API connectivity, live RPC, wallet/key storage or signing, blockchain transactions, live market data, strategies, bots, execution, and real-money trading.
+Default path: `data/metadata.sqlite3`, configurable with `[storage].data_dir`.
 
-## Remaining Phase 2 verification
+Tables: `networks`, `tokens`, `contracts`, `abis`, `assets`, `trading_pairs`, `venues`, `markets`, `fee_metadata`, `asset_tokens`, `schema_version`.
 
-- Confirm all automated tests pass on Python 3.10, 3.11, and 3.12 in GitHub Actions.
-- Review CI failures, correct any regressions, and verify final commit/PR state.
-- Verify database and CLI workflows against the actual integrated branch.
+Back up before migrations or manual maintenance. With WAL active, stop/close/checkpoint before copying only the main database file; if copying while open, retain WAL/SHM files. Restore only with the application stopped. Startup never drops or resets existing data.
+
+## Delivery state
+
+- Branch: `phase2/metadata-persistence`
+- PR: https://github.com/sina1991/Trading-Management-Platform/pull/1
+- PR head: `5781e1583438bc057a95cc85fb3f01f8e874e644`
+- CI run 42648912267: SUCCESS on Python 3.10, 3.11, 3.12.
+- Pending at time of this handoff: merge PR and verify final main-branch commit and CI.
+
+## Remaining work and limitations
+
+No critical Phase 2 requirement remains identified by the automated test suite. Known boundaries:
+- Only EVM-style hexadecimal address shape is validated; other network address schemes need network-specific validators later.
+- Fee rates are configured metadata fractions; no dynamic fee calculation or gas estimation exists.
+- CLI data entry is JSON-based rather than wizard-style.
+- SQLite is the only implemented adapter; PostgreSQL is a future adapter behind the repository port.
+- Manual interactive acceptance by the repository owner has not been performed.
+- Phase 3 and all live integrations remain outside this work.
+
+## Recommended Phase 3
+
+Proceed only after a separate instruction: Strategy definitions and Bot Instance metadata/lifecycle management, keeping strategy logic independent of Bot lifecycle and Execution. Do not begin Phase 3 in this task.
