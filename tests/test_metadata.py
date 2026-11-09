@@ -29,7 +29,7 @@ def test_complete_metadata_workflow_and_restart(tmp_path):
     store,svc=setup(tmp_path)
     assert svc.get("market",market.id).venue_id==venue.id
     assert store.integrity_check()==["ok"]
-    assert store.schema_version()==1
+    assert store.schema_version()==2
     store.close()
 
 def test_network_chain_id_is_unique(tmp_path):
@@ -148,7 +148,7 @@ def test_update_and_delete_crud(tmp_path):
 def test_storage_status_and_integrity(tmp_path):
     store,svc=setup(tmp_path)
     status=store.status()
-    assert status["schema_version"]==1
+    assert status["schema_version"]==2
     assert status["foreign_keys"] is True
     assert status["integrity"]==["ok"]
     store.close()
@@ -197,7 +197,7 @@ def test_sqlite_trigger_rejects_cross_network_token_contract_direct_store(tmp_pa
 def test_schema_v1_to_v2_migration_is_idempotent_and_preserves_records(tmp_path):
     store,svc=setup(tmp_path)
     network=svc.add(Network(name="saved",chain_id=987))
-    store.db.execute("UPDATE schema_version SET version=1")
+    store.db.execute("DROP TRIGGER IF EXISTS tokens_contract_network_insert")\n    store.db.execute("DROP TRIGGER IF EXISTS tokens_contract_network_update")\n    store.db.execute("DROP TRIGGER IF EXISTS markets_pool_network_insert")\n    store.db.execute("DROP TRIGGER IF EXISTS markets_pool_network_update")\n    store.db.execute("UPDATE schema_version SET version=1")
     store.db.commit()
     store.close()
     store=SQLiteStore(tmp_path/"metadata.sqlite3")
