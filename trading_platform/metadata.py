@@ -21,7 +21,21 @@ class Model:
     kind: ClassVar[str] = "model"
     def validate(self):
         if not isinstance(self.id,str) or not self.id.strip(): raise MetadataError("id is required")
+        if hasattr(self,"metadata"):
+            metadata=getattr(self,"metadata")
+            if not isinstance(metadata,dict): raise MetadataError("metadata must be an object")
+            forbidden={"password","secret","private_key","privatekey","api_key","apikey","access_token","credential"}
+            def inspect(value):
+                if isinstance(value,dict):
+                    for key,item in value.items():
+                        if str(key).casefold() in forbidden: raise MetadataError("Do not store credentials or secrets in metadata; use a secure external reference")
+                        inspect(item)
+                elif isinstance(value,list):
+                    for item in value: inspect(item)
+            inspect(metadata)
     def to_dict(self): return asdict(self)
+    @classmethod
+    def from_dict(cls,value): return cls(**value)
 
 @dataclass
 class Network(Model):
@@ -38,6 +52,7 @@ class Network(Model):
         if not self.name.strip() or not self.native_currency.strip(): raise MetadataError("network name and native currency are required")
         if type(self.chain_id) is not int or self.chain_id <= 0: raise MetadataError("chain_id must be a positive integer")
         if self.status not in {"active","inactive","testnet","deprecated"}: raise MetadataError("invalid network status")
+        if self.rpc_config_ref and self.rpc_config_ref.lower().startswith(("http://","https://")): raise MetadataError("rpc_config_ref must be a configuration reference, not a URL or credential")
         if not isinstance(self.metadata,dict): raise MetadataError("metadata must be an object")
 
 @dataclass
