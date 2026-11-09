@@ -133,3 +133,22 @@ def test_asset_and_abi_search(tmp_path):
     assert svc.find_assets(symbol="btc")[0].id==asset.id
     assert svc.find_abis(name="erc20",version="2")[0].id==abi.id
     store.close()
+
+def test_update_and_delete_crud(tmp_path):
+    store,svc=setup(tmp_path)
+    item=svc.add(Network(name="Initial",chain_id=15555))
+    item.name="Updated"
+    saved=svc.update(item)
+    assert saved.name=="Updated"
+    assert saved.updated_at>=saved.created_at
+    svc.delete("network",saved.id)
+    with pytest.raises(MetadataError): svc.get("network",saved.id)
+    store.close()
+
+def test_storage_status_and_integrity(tmp_path):
+    store,svc=setup(tmp_path)
+    status=store.status()
+    assert status["schema_version"]==1
+    assert status["foreign_keys"] is True
+    assert status["integrity"]==["ok"]
+    store.close()
