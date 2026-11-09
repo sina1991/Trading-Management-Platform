@@ -245,8 +245,9 @@ def test_redirect_handler_refuses_redirects():
     from trading_platform.connectors.coinbase_advanced_trade import _NoRedirectHandler
     handler = _NoRedirectHandler()
     request = Request(BASE_URL + "/product_book?product_id=BTC-USD")
-    assert handler.redirect_request(request, object(), 302, "Found", {}, "https://unexpected.example/")
-        is None
+    assert handler.redirect_request(
+        request, object(), 302, "Found", {}, "https://unexpected.example/"
+    ) is None
 
 
 def test_cli_order_book_shows_exchange_receipt_and_freshness(monkeypatch, tmp_path):
