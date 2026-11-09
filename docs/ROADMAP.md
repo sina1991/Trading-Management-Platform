@@ -17,6 +17,14 @@
 - [x] CLI integration through the existing Command Registry
 - [x] Automated verification on Python 3.10, 3.11, and 3.12 (30 tests passed in each CI job)
 
+## Phase A — Read-only market data
+
+- [x] Provider-neutral market-data protocol and normalized quote/order-book models
+- [x] Coinbase Advanced Trade public product-book GET adapter (no credentials)
+- [x] CLI quote and order-book inspection
+- [x] Deterministic adapter tests; live exchange smoke test remains separate
+- [ ] Validate a live public quote in the operator's environment
+
 ## Phase 3 — Strategy and Bot metadata
 
 Implement strategy definitions and independent Bot Instance metadata/lifecycle state. No algorithmic trading execution.
@@ -27,4 +35,4 @@ Define risk validation and deterministic simulation/paper-execution contracts. K
 
 ## Phase 5 — External integrations (separate authorization required)
 
-Only after explicit approval: exchange/DEX adapters, network/RPC, wallet integration, and real execution. Security review, threat model, credential handling, and safety controls are prerequisites.
+Only after separate explicit approval: authenticated exchange access, DEX/RPC, wallet integration, and any execution capability. Phase A's public read-only market-data scope is separately authorized and does not grant trading permission. Security review, threat model, credential handling, and safety controls remain prerequisites.

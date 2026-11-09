@@ -53,3 +53,12 @@ Migrations are versioned and run within SQLite transactions. Startup creates mis
 ## Explicit exclusions
 
 No live exchange, DEX, RPC, wallet, signing, transaction, market-data, strategy, bot-execution, or real-money capability is part of Phase 2.
+
+
+## Public market-data integration
+
+Phase A adds a provider-neutral `MarketDataProvider` protocol and immutable
+normalized market-data value objects. The Coinbase Advanced Trade adapter uses
+only its unauthenticated public product-book GET endpoint. It has no credential
+configuration and no account/order/transfer methods. It is isolated from
+MetadataService and SQLite; market snapshots are not persisted in this phase.

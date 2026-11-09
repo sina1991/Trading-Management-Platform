@@ -79,3 +79,14 @@ No critical Phase 2 requirement remains identified by the automated test suite. 
 ## Recommended Phase 3
 
 Proceed only after a separate instruction: Strategy definitions and Bot Instance metadata/lifecycle management, keeping strategy logic independent of Bot lifecycle and Execution. Do not begin Phase 3 in this task.
+
+
+## Phase A — read-only public market data (implementation branch)
+
+- Selected Coinbase Advanced Trade public market-data API; no API key or account access.
+- Added a provider-neutral MarketDataProvider protocol and immutable Decimal-based quote/order-book models.
+- Added a GET-only Coinbase product-book adapter with product-ID validation, bounded timeout/response size, timestamp validation, and malformed/crossed-book rejection.
+- Added CLI actions for best bid/ask and order-book inspection.
+- Added deterministic fake-transport tests; these tests do not contact Coinbase.
+- Explicitly excluded authenticated/private endpoints, credentials, balances, wallets, transfers, orders, signing, execution, and persistence.
+- Pending: review PR, confirm Python 3.10/3.11/3.12 CI, and run an operator-approved live public-data smoke test.
