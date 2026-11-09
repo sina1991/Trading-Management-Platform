@@ -4,7 +4,7 @@
 **Default branch:** `main`  
 **Implementation branch:** `phase2/metadata-persistence` (merged)  
 **Phase:** Phase 2 — Metadata Management & Persistence  
-**Status:** COMPLETE — merged into `main`; pull-request CI verified and final main-branch CI pending.
+**Status:** COMPLETE — merged into `main`; pull-request and main-branch CI verified.
 
 ## Initial audit
 
