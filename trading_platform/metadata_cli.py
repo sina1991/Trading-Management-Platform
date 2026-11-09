@@ -35,7 +35,10 @@ class MetadataCLI:
         if command.endswith("find_network"): return self.show_many(self.service.find_contracts_by_network(self.input("Network ID: ").strip()))
         if command.endswith("find_venue"): return self.show_many(self.service.find_markets_by_venue(self.input("Venue ID: ").strip()))
         if command.endswith("find_pair"): return self.show_many(self.service.find_markets_by_pair(self.input("Trading Pair ID: ").strip()))
-        if op=="find": return self.show_many(self.service.find_tokens(self.input("Network ID (blank for any): ").strip() or None,self.input("Symbol (blank for any): ").strip() or None))
+        if op=="find":
+            if kind=="asset": return self.show_many(self.service.find_assets(self.input("Name (blank for any): ").strip() or None,self.input("Symbol (blank for any): ").strip() or None))
+            if kind=="abi": return self.show_many(self.service.find_abis(self.input("ABI name (blank for any): ").strip() or None,self.input("Version (blank for any): ").strip() or None))
+            return self.show_many(self.service.find_tokens(self.input("Network ID (blank for any): ").strip() or None,self.input("Symbol (blank for any): ").strip() or None))
         if op=="add": return self.create(kind)
         if op=="list": return self.show_many(self.service.list(kind))
         if op in {"get","view"}:
