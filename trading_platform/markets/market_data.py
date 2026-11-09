@@ -66,18 +66,28 @@ class OrderBookSnapshot:
     def spread_bps(self) -> Decimal:
         return self.spread / self.midpoint * Decimal("10000")
 
-    def age_seconds(self, now: Optional[datetime] = None) -> float:
+    def age_seconds(self, now: Optional[datetime] = None) -> Optional[float]:
+        """Return exchange-data age; None means exchange time is unknown.
+
+        Future exchange timestamps are invalid rather than clamped to age zero.
+        """
+        timestamp = self.exchange_timestamp
+        if timestamp is None:
+            return None
         reference = now or datetime.now(timezone.utc)
-        timestamp = self.exchange_timestamp or self.received_at
         if reference.tzinfo is None or timestamp.tzinfo is None:
-            raise ValueError("Market-data timestamps must be timezone-aware")
-        return max(0.0, (reference - timestamp).total_seconds())
+            raise InvalidMarketData("Market-data timestamps must be timezone-aware")
+        age = (reference - timestamp).total_seconds()
+        if age < 0:
+            raise InvalidMarketData("Exchange timestamp is in the future")
+        return age
 
     def is_stale(self, max_age_seconds: float = 10.0,
-                 now: Optional[datetime] = None) -> bool:
+                 now: Optional[datetime] = None) -> Optional[bool]:
         if max_age_seconds < 0:
             raise ValueError("max_age_seconds cannot be negative")
-        return self.age_seconds(now) > max_age_seconds
+        age = self.age_seconds(now)
+        return None if age is None else age > max_age_seconds
 
 
 @dataclass(frozen=True)
