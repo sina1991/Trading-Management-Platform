@@ -2,9 +2,9 @@
 
 **Repository:** https://github.com/sina1991/Trading-Management-Platform  
 **Default branch:** `main`  
-**Implementation branch:** `phase2/metadata-persistence`  
+**Implementation branch:** `phase2/metadata-persistence` (merged)  
 **Phase:** Phase 2 — Metadata Management & Persistence  
-**Status:** COMPLETE — implementation and automated CI verified; awaiting PR merge.
+**Status:** COMPLETE — merged into `main`; pull-request CI verified and final main-branch CI pending.
 
 ## Initial audit
 
@@ -59,11 +59,12 @@ Back up before migrations or manual maintenance. With WAL active, stop/close/che
 
 ## Delivery state
 
-- Branch: `phase2/metadata-persistence`
-- PR: https://github.com/sina1991/Trading-Management-Platform/pull/1
-- PR head: `5781e1583438bc057a95cc85fb3f01f8e874e644`
-- CI run 42648912267: SUCCESS on Python 3.10, 3.11, 3.12.
-- Pending at time of this handoff: merge PR and verify final main-branch commit and CI.
+- Working branch: `phase2/metadata-persistence`
+- PR: https://github.com/sina1991/Trading-Management-Platform/pull/1 (merged)
+- PR head before final documentation updates: `fa2f7519ffa3e766561f3202b2bb2a949ae438be`
+- Merge commit on `main`: `267f40005a714ec0c3e1811ad2a3cb04a87bb39a`
+- PR CI run 42648912267: SUCCESS; 30 tests passed on Python 3.10, 3.11, and 3.12.
+- Final main-branch CI run 42649104463 was queued after merge; verify its final conclusion before declaring delivery fully verified.
 
 ## Remaining work and limitations
 
