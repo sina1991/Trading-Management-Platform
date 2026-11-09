@@ -38,6 +38,8 @@ class MetadataService:
             market=self.store.get("market",m.market_id); venue=self.store.get("venue",market.venue_id)
             if venue.venue_type=="cex" and m.dex_pool_fee is not None: raise MetadataError("CEX fee records cannot set DEX pool fee")
             if venue.venue_type=="dex" and (m.cex_maker_fee is not None or m.cex_taker_fee is not None): raise MetadataError("DEX fee records cannot set CEX maker/taker fees")
+    def find_assets(self,name=None,symbol=None): return [x for x in self.list("asset") if (name is None or x.name.casefold()==name.casefold()) and (symbol is None or x.symbol.casefold()==symbol.casefold())]
+    def find_abis(self,name=None,version=None): return [x for x in self.list("abi") if (name is None or x.name.casefold()==name.casefold()) and (version is None or x.version==version)]
     def find_network_by_chain_id(self,chain_id): return next((x for x in self.list("network") if x.chain_id==chain_id),None)
     def find_tokens(self,network_id=None,symbol=None):
         return [x for x in self.list("token") if (network_id is None or x.network_id==network_id) and (symbol is None or x.symbol.casefold()==symbol.casefold())]
