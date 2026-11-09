@@ -7,8 +7,8 @@ Start with `python -m trading_platform`. Phase 2 uses the existing central Comma
 - Network: add, list, view, update, delete, validate, find by chain ID.
 - Token: add, list, view, update, delete, find, validate.
 - Contract: add, list, view, update, delete, validate, find by Network.
-- ABI: add, list, view, update, delete, validate, link to Contract.
-- Asset: add, list, view, update, delete, link Token, list Token representations.
+- ABI: add, list, view, update, delete, find, validate, link to Contract.
+- Asset: add, list, view, update, delete, find, link Token, list Token representations.
 - Trading Pair: add, list, view, update, delete, validate.
 - Trading Venue: add, list, view, update, delete.
 - Market: add, list, view, update, delete, validate, find by Venue, find by Trading Pair, configure fees.
