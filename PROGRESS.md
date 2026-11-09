@@ -89,4 +89,5 @@ Proceed only after a separate instruction: Strategy definitions and Bot Instance
 - Added CLI actions for best bid/ask and order-book inspection.
 - Added deterministic fake-transport tests; these tests do not contact Coinbase.
 - Explicitly excluded authenticated/private endpoints, credentials, balances, wallets, transfers, orders, signing, execution, and persistence.
-- Pending: review PR, confirm Python 3.10/3.11/3.12 CI, and run an operator-approved live public-data smoke test.
+- CI: implementation commit `ac8b9647eea1183b68ff6813b198ade7e4e8c777` passed all three Python matrix jobs. The current head adds only this handoff-status correction.
+- Pending: operator-approved live public-data smoke test.
