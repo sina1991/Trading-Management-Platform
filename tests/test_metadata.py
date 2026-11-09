@@ -1,4 +1,5 @@
 import pytest
+from pathlib import Path
 from trading_platform.metadata import (Network, ABI, Contract, Token, Asset, TradingPair, TradingVenue, Market, FeeMetadata, MetadataError, RelationshipError, DuplicateError)
 from trading_platform.persistence import SQLiteStore
 from trading_platform.services import MetadataService
@@ -103,7 +104,8 @@ def test_abi_checksum_is_generated(tmp_path):
     assert len(abi.checksum)==64
     store.close()
 
-def test_cli_metadata_commands_are_ready(project_root):
+def test_cli_metadata_commands_are_ready():
+    project_root = Path(__file__).resolve().parents[1]
     from trading_platform.catalog import build_command_specs
     from trading_platform.core import CommandRegistry, ReadinessChecker, ReadinessStatus
     registry=CommandRegistry(build_command_specs())
