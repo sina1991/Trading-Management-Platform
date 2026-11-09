@@ -3,9 +3,33 @@ from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from typing import Any, ClassVar
 from uuid import uuid4
-import json\nimport re
+import json
+import re
 
-\ndef _validate_abi_definition(definition):\n    allowed={"function","event","error","constructor","fallback","receive"}\n    def parameters(value, label):\n        if not isinstance(value,list): raise MetadataError(f"ABI {label} must be an array")\n        for item in value:\n            if not isinstance(item,dict) or not isinstance(item.get("type"),str) or not item["type"].strip():\n                raise MetadataError(f"ABI {label} entries require a string type")\n            if "name" in item and not isinstance(item["name"],str): raise MetadataError(f"ABI {label} name must be a string")\n            if "components" in item: parameters(item["components"], label+" components")\n    for entry in definition:\n        if not isinstance(entry,dict): raise MetadataError("ABI entries must be objects")\n        kind=entry.get("type","function")\n        if not isinstance(kind,str) or kind not in allowed: raise MetadataError("Unsupported ABI entry type")\n        if kind in {"function","event","error"} and (not isinstance(entry.get("name"),str) or not entry["name"].strip()):\n            raise MetadataError(f"ABI {kind} entries require a name")\n        if kind in {"function","event","error","constructor"}: parameters(entry.get("inputs",[]),"inputs")\n        if kind=="function": parameters(entry.get("outputs",[]),"outputs")\n        if "stateMutability" in entry and entry["stateMutability"] not in {"pure","view","nonpayable","payable"}:\n            raise MetadataError("Invalid ABI stateMutability")\n        if kind=="event" and "anonymous" in entry and not isinstance(entry["anonymous"],bool):\n            raise MetadataError("ABI event anonymous must be boolean")\n\ndef timestamp(): return datetime.now(timezone.utc).isoformat()
+
+def _validate_abi_definition(definition):
+    allowed={"function","event","error","constructor","fallback","receive"}
+    def parameters(value, label):
+        if not isinstance(value,list): raise MetadataError(f"ABI {label} must be an array")
+        for item in value:
+            if not isinstance(item,dict) or not isinstance(item.get("type"),str) or not item["type"].strip():
+                raise MetadataError(f"ABI {label} entries require a string type")
+            if "name" in item and not isinstance(item["name"],str): raise MetadataError(f"ABI {label} name must be a string")
+            if "components" in item: parameters(item["components"], label+" components")
+    for entry in definition:
+        if not isinstance(entry,dict): raise MetadataError("ABI entries must be objects")
+        kind=entry.get("type","function")
+        if not isinstance(kind,str) or kind not in allowed: raise MetadataError("Unsupported ABI entry type")
+        if kind in {"function","event","error"} and (not isinstance(entry.get("name"),str) or not entry["name"].strip()):
+            raise MetadataError(f"ABI {kind} entries require a name")
+        if kind in {"function","event","error","constructor"}: parameters(entry.get("inputs",[]),"inputs")
+        if kind=="function": parameters(entry.get("outputs",[]),"outputs")
+        if "stateMutability" in entry and entry["stateMutability"] not in {"pure","view","nonpayable","payable"}:
+            raise MetadataError("Invalid ABI stateMutability")
+        if kind=="event" and "anonymous" in entry and not isinstance(entry["anonymous"],bool):
+            raise MetadataError("ABI event anonymous must be boolean")
+
+def timestamp(): return datetime.now(timezone.utc).isoformat()
 def identifier(): return str(uuid4())
 
 class MetadataError(ValueError): pass
@@ -28,7 +52,8 @@ class Model:
             def inspect(value):
                 if isinstance(value,dict):
                     for key,item in value.items():
-                        normalized=re.sub(r"[^a-z0-9]","",str(key).casefold())\n                        if normalized in forbidden or normalized.endswith(("apikey","privatekey","clientsecret","accesstoken")): raise MetadataError("Do not store credentials or secrets in metadata; use a secure external reference")
+                        normalized=re.sub(r"[^a-z0-9]","",str(key).casefold())
+                        if normalized in forbidden or normalized.endswith(("apikey","privatekey","clientsecret","accesstoken")): raise MetadataError("Do not store credentials or secrets in metadata; use a secure external reference")
                         inspect(item)
                 elif isinstance(value,list):
                     for item in value: inspect(item)
