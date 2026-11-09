@@ -3,8 +3,8 @@
 **Repository:** https://github.com/sina1991/Trading-Management-Platform  
 **Default branch:** `main`  
 **Implementation branch:** `phase2/metadata-persistence` (merged)  
-**Phase:** Phase 2 — Metadata Management & Persistence  
-**Status:** COMPLETE — merged into `main`; pull-request and main-branch CI verified.
+**Phase:** Phase 2 complete; Phase A — Read-only Market Data  
+**Status:** Phase A implementation is on a draft PR; CI and live provider smoke test are pending.
 
 ## Initial audit
 
