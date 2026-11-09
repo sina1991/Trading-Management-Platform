@@ -66,7 +66,7 @@ def test_pair_requires_distinct_existing_assets(tmp_path):
     store,svc=setup(tmp_path)
     a=svc.add(Asset(name="Bitcoin",symbol="BTC"))
     with pytest.raises(MetadataError): svc.add(TradingPair(base_asset_id=a.id,quote_asset_id=a.id))
-    with pytest.raises(RelationshipError): svc.add(TradingPair(base_asset_id="missing",quote_asset_id="also-missing"))
+    with pytest.raises(MetadataError): svc.add(TradingPair(base_asset_id="missing",quote_asset_id="also-missing"))
     store.close()
 
 def test_dex_market_requires_network_and_cex_rejects_pool_fields(tmp_path):
@@ -111,3 +111,23 @@ def test_cli_metadata_commands_are_ready(project_root):
     for command in registry.all():
         if command.handler_key=="metadata_dispatch":
             assert checker.check(command).status is ReadinessStatus.READY
+
+def test_public_metadata_rejects_secrets():
+    with pytest.raises(MetadataError):
+        Network(name="Unsafe",chain_id=999,metadata={"rpc":{"api_key":"never-store"}}).validate()
+
+def test_rpc_config_is_reference_not_url():
+    with pytest.raises(MetadataError):
+        Network(name="Unsafe",chain_id=1000,rpc_config_ref="https://user:pass@example.invalid").validate()
+
+def test_model_round_trip():
+    n=Network(name="Ethereum",chain_id=1)
+    assert Network.from_dict(n.to_dict())==n
+
+def test_asset_and_abi_search(tmp_path):
+    store,svc=setup(tmp_path)
+    asset=svc.add(Asset(name="Bitcoin",symbol="BTC"))
+    abi=svc.add(ABI(name="ERC20",version="2",definition=[]))
+    assert svc.find_assets(symbol="btc")[0].id==asset.id
+    assert svc.find_abis(name="erc20",version="2")[0].id==abi.id
+    store.close()
