@@ -1,0 +1,10 @@
+[platform]
+name = "Trading Management Platform"
+environment = "development"
+
+[logging]
+level = "INFO"
+file = "logs/platform.log"
+
+[storage]
+data_dir = "data"
