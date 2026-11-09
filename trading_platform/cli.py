@@ -83,12 +83,28 @@ class TradingPlatformCLI:
         if not report.is_ready:
             self.output("This operation cannot execute until its status is READY.")
             return
+        if command.handler_key == "metadata_dispatch":
+            self._metadata_dispatch(command_id)
+            return
         handler = self.handlers.get(command.handler_key or "")
         if handler is None:
             self.output("Readiness inconsistency: no runtime handler is registered.")
             self.logger.error("Missing handler for READY command %s", command_id)
             return
         handler()
+
+    def _metadata_dispatch(self, command_id: str) -> None:
+        from trading_platform.metadata_cli import MetadataCLI
+        adapter = None
+        try:
+            adapter = MetadataCLI(self.root, self.config, self.input, self.output)
+            adapter.execute(command_id)
+        except Exception as exc:
+            self.output(f"Metadata operation failed: {type(exc).__name__}: {exc}")
+            self.logger.exception("Metadata command failed: %s", command_id)
+        finally:
+            if adapter is not None:
+                adapter.close()
 
     def _readiness(self) -> None:
         self.output(_header("PROJECT READINESS"))
